@@ -151,19 +151,45 @@ function initBgCanvas(){
 /* =====================================================================
    PHASE 0 — PLAYER NAME MODAL
 ===================================================================== */
-
-// read "player_name" from the current URL query string
 function getPlayerNameFromUrl(){
-  const params = new URLSearchParams(window.location.search);
-  const name = params.get('player_name');
-  return name ? name.trim() : "";
+  const search = window.location.search;
+  if(!search) return "";
+
+  // regex: tangkap nilai player_name hingga & berikutnya atau akhir string
+  // \+ di-replace ke %20 dulu agar decodeURIComponent bisa decode spasi
+  const match = search.match(/[?&]player_name=([^&]*)/);
+  if(!match) return "";
+
+  try {
+    const raw = match[1].replace(/\+/g, '%20');
+    return decodeURIComponent(raw).trim();
+  } catch(e){
+    return match[1].trim();
+  }
 }
 
-// write/update "player_name" in the URL without reloading the page
 function setPlayerNameInUrl(name){
-  const url = new URL(window.location.href);
-  url.searchParams.set('player_name', name);
-  window.history.replaceState({}, '', url);
+  // encodeURIComponent encode spasi → %20, & → %26, konsisten di semua browser
+  const encoded = encodeURIComponent(name);
+  const search  = window.location.search;
+
+  let newSearch;
+  if(!search){
+    newSearch = '?player_name=' + encoded;
+  } else {
+    // ganti nilai player_name yang sudah ada, atau tambahkan di akhir
+    if(/[?&]player_name=/.test(search)){
+      newSearch = search.replace(/([?&]player_name=)[^&]*/, '$1' + encoded);
+    } else {
+      newSearch = search + '&player_name=' + encoded;
+    }
+  }
+
+  window.history.replaceState(
+    {},
+    '',
+    window.location.pathname + newSearch + window.location.hash
+  );
 }
 
 // resolves the player name (from URL or modal), then calls onReady(name)
@@ -291,6 +317,7 @@ function openScrollTransition(){
       $('html, body').css('overflow', '');
       initScrollAnimations();
       startMusicIfAllowed();
+      loadMessages(); // muat ucapan dari ucapan.php begitu scroll terbuka
     });
   }, 850);
 }
@@ -659,6 +686,12 @@ function initLightbox(){
 function initRsvpForm(){
   let selectedAttendance = null;
 
+  // auto-fill nama dari URL player_name
+  const urlName = getPlayerNameFromUrl();
+  if(urlName){
+    $('#rsvp-name').val(urlName);
+  }
+
   $('.rsvp-option-btn').on('click', function(){
     $('.rsvp-option-btn').removeClass('active');
     $(this).addClass('active');
@@ -669,42 +702,175 @@ function initRsvpForm(){
   $('#rsvp-form').on('submit', function(e){
     e.preventDefault();
 
-    const name = $('#rsvp-name').val().trim();
-    const message = $('#rsvp-message').val().trim();
+    const name       = $('#rsvp-name').val().trim();
+    const message    = $('#rsvp-message').val().trim();
+    const $submitBtn = $(this).find('.rsvp-submit-btn');
 
     if(!name){
-      $('#rsvp-name').focus();
+      $('#rsvp-name').trigger('focus');
       return;
     }
     if(!selectedAttendance){
-      // gently nudge: flash the attendance row
       $('#rsvp-attendance').css('outline', '2px solid var(--rose)');
       setTimeout(() => $('#rsvp-attendance').css('outline', 'none'), 700);
       return;
     }
 
-    // NOTE: This demo stores nothing server-side (no backend per project spec).
-    // To wire this to a real backend, replace this block with a fetch()/AJAX
-    // call to your endpoint (e.g. Google Apps Script, Formspree, etc).
-    const submission = {
-      name,
-      attendance: selectedAttendance,
-      message,
-      submittedAt: new Date().toISOString()
-    };
-    console.log('RSVP submission (local only):', submission);
+    $submitBtn.prop('disabled', true).text('SENDING...');
 
-    $('#rsvp-success').removeClass('hidden');
-    playSfx('sfx-confirm');
-    $('#rsvp-form')[0].reset();
-    $('.rsvp-option-btn').removeClass('active');
-    selectedAttendance = null;
-
-    setTimeout(() => {
-      $('#rsvp-success').addClass('hidden');
-    }, 5000);
+    $.ajax({
+      url: 'ucapan.php',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ name, attendance: selectedAttendance, message }),
+      success: function(res){
+        if(res.status === 'ok'){
+          $('#rsvp-success').removeClass('hidden');
+          playSfx('sfx-confirm');
+          $('#rsvp-form')[0].reset();
+          // isi ulang nama setelah reset
+          if(urlName) $('#rsvp-name').val(urlName);
+          $('.rsvp-option-btn').removeClass('active');
+          selectedAttendance = null;
+          loadMessages();
+          setTimeout(() => $('#rsvp-success').addClass('hidden'), 5000);
+        }
+      },
+      error: function(xhr){
+        const res = xhr.responseJSON;
+        const msg = (res && res.message) ? res.message : 'Gagal mengirim pesan. Coba lagi.';
+        alert(msg);
+      },
+      complete: function(){
+        $submitBtn.prop('disabled', false).html(
+          '<span class="pixel-btn-arrow">▶</span> SEND MESSAGE'
+        );
+      }
+    });
   });
 }
+
+/* =====================================================================
+   LOAD & RENDER UCAPAN dari ucapan.php (GET → ucapan.json)
+===================================================================== */
+function loadMessages(){
+  const $list    = $('#message-list');
+  const $count   = $('#message-count');
+  const $loading = $('#message-loading');
+  const urlName  = getPlayerNameFromUrl(); // nama dari URL untuk cek kepemilikan
+
+  $loading.removeClass('hidden');
+
+  $.ajax({
+    url: 'ucapan.php',
+    method: 'GET',
+    dataType: 'json',
+    success: function(res){
+      $loading.addClass('hidden');
+
+      if(!res.entries || res.entries.length === 0){
+        $list.html('<p class="message-empty">// no messages yet — be the first adventurer to write one.</p>');
+        $count.text('');
+        return;
+      }
+
+      $count.text('(' + res.total + ')');
+      $list.empty();
+
+      res.entries.forEach(function(entry, idx){
+        const date  = formatMessageDate(entry.created_at);
+        const badge = entry.attendance === 'hadir'
+          ? '<span class="msg-badge msg-badge-hadir">✦ Hadir</span>'
+          : '<span class="msg-badge msg-badge-tidak">✕ Tidak Hadir</span>';
+        const msgText = entry.message
+          ? '<p class="msg-text">' + escapeHtml(entry.message) + '</p>'
+          : '';
+
+        // tampilkan tombol delete hanya jika nama URL cocok dengan nama pengirim
+        const isOwner = urlName &&
+          urlName.trim().toLowerCase() === entry.name.trim().toLowerCase();
+        const deleteBtn = isOwner
+          ? `<button class="msg-delete-btn" data-id="${escapeHtml(entry.id)}" title="Hapus ucapan ini">✕</button>`
+          : '';
+
+        const $card = $(`
+          <div class="msg-card" data-id="${escapeHtml(entry.id)}" style="animation-delay:${idx * 0.06}s">
+            <div class="msg-card-header">
+              <span class="msg-name">${escapeHtml(entry.name)}</span>
+              ${badge}
+              ${deleteBtn}
+            </div>
+            ${msgText}
+            <span class="msg-date">${date}</span>
+          </div>
+        `);
+        $list.append($card);
+      });
+    },
+    error: function(){
+      $loading.addClass('hidden');
+      $list.html('<p class="message-empty">// could not load messages. Make sure ucapan.php is reachable.</p>');
+    }
+  });
+}
+
+/* =====================================================================
+   DELETE UCAPAN
+===================================================================== */
+function deleteMessage(id){
+  const urlName = getPlayerNameFromUrl();
+  if(!urlName) return;
+
+  $.ajax({
+    url: 'ucapan.php',
+    method: 'DELETE',
+    contentType: 'application/json',
+    data: JSON.stringify({ id, player_name: urlName }),
+    success: function(res){
+      if(res.status === 'ok'){
+        // animasi hilang lalu reload
+        $(`[data-id="${id}"]`).css({ transition: 'opacity 0.3s', opacity: 0 });
+        setTimeout(() => loadMessages(), 320);
+        playSfx('sfx-confirm');
+      }
+    },
+    error: function(xhr){
+      const res = xhr.responseJSON;
+      const msg = (res && res.message) ? res.message : 'Gagal menghapus.';
+      alert(msg);
+    }
+  });
+}
+
+// helper: format ISO date menjadi teks pendek ramah
+function formatMessageDate(isoString){
+  if(!isoString) return '';
+  try{
+    const d = new Date(isoString);
+    const pad = n => String(n).padStart(2,'0');
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch(e){
+    return isoString;
+  }
+}
+
+// helper: escape HTML untuk mencegah XSS saat render teks dari server
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// delegated handler untuk tombol delete di message board
+$(document).on('click', '.msg-delete-btn', function(e){
+  e.stopPropagation();
+  const id = $(this).data('id');
+  if(!id) return;
+  deleteMessage(id);
+});
 
 /* =====================================================================
    GIFT TREASURE CHEST

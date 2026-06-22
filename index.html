@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Quest of Two Hearts — Wedding Invitation</title>
+<title>Fathur & Sephia — Wedding Invitation</title>
 <meta name="description" content="A retro RPG love story that unfolds into a wedding invitation.">
 
 <!-- ===== FONTS (CDN) ===== -->
@@ -297,6 +297,22 @@
           ✦ Message Sent! Thank you, brave guest. ✦
         </div>
       </form>
+
+      <!-- message board — ditampilkan di bawah form, diisi oleh JS -->
+      <div class="message-board" id="message-board">
+        <div class="message-board-header">
+          <span class="message-board-icon">📜</span>
+          <span class="message-board-title">Adventurer Log</span>
+          <span class="message-board-count" id="message-count"></span>
+        </div>
+        <div class="message-board-body" id="message-list">
+          <div class="message-loading" id="message-loading">
+            <span class="message-loading-dot">.</span><span class="message-loading-dot">.</span><span class="message-loading-dot">.</span>
+            loading messages
+          </div>
+        </div>
+      </div>
+      
     </section>
 
     <div class="chapter-divider" aria-hidden="true"><span>❀</span><span>✦</span><span>❀</span></div>
