@@ -28,9 +28,9 @@ const weddingData = {
   // ----- short story (each entry = one short paragraph, like a letter) -----
   story: [
     "Pada waktu yang tidak kami duga, dua jalan yang berbeda arah perlahan bertemu di satu titik yang sama.",
-    "Bukan kebetulan — begitu kami menyebutnya kini. Sebab setiap pertemuan kecil ternyata membawa makna yang besar.",
+    "Bukan kebetulan — begitu kami menyebutnya kini. Sebab setiap pertemuan kecil terasa seperti bagian dari cerita yang sudah diatur sejak awal permainan, membawa makna yang perlahan semakin jelas.",
     "Dari sekadar saling menyapa, tumbuh rasa percaya. Dari percaya, tumbuh keberanian untuk saling memilih, setiap hari, tanpa ragu.",
-    "Dan kini, dengan restu Tuhan serta doa orang-orang tercinta, kami melangkah ke babak baru — bukan lagi sebagai dua pemain terpisah, melainkan satu tim untuk selamanya."
+    "Dan kini, dengan restu Tuhan serta doa orang-orang tercinta, kami melangkah ke babak baru — bukan lagi sebagai dua karakter yang berjalan sendiri, melainkan satu tim yang siap menghadapi perjalanan untuk selamanya."
   ],
 
   // ----- gallery (4–8 photos). Put files in assets/images/ -----
@@ -375,7 +375,7 @@ function animateUnroll($stage, onComplete){
 function populateContent(){
   // opening
   $('#opening-flavor').text(
-    `Sebuah catatan perjalanan dari dua karakter, ${weddingData.groomShort} dan ${weddingData.brideShort}, yang akhirnya menemukan akhir cerita yang mereka cari sejak awal permainan.`
+    `Kami menuliskan catatan perjalanan ini sebagai dua karakter, ${weddingData.groomShort} dan ${weddingData.brideShort} yang akhirnya menemukan akhir cerita yang kami cari sejak awal permainan.`
   );
 
   // names
