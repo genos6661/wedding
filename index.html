@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Quest of Two Hearts — Wedding Invitation</title>
+<meta name="description" content="A retro RPG love story that unfolds into a wedding invitation.">
+
+<!-- ===== FONTS (CDN) ===== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=MedievalSharp&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="assets/icons/title.ico">
+<!-- ===== CSS ===== -->
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============================================================
+     CANVAS BACKDROP — pixel star/noise field, sits behind everything
+============================================================= -->
+<canvas id="bg-noise"></canvas>
+
+<!-- ============================================================
+     PHASE 0 — PLAYER NAME MODAL (retro game "enter your name" prompt)
+============================================================= -->
+<div id="player-modal" class="player-modal hidden">
+  <div class="player-modal-overlay"></div>
+  <div class="player-modal-box">
+    <div class="player-modal-header">
+      <span class="player-modal-deco">✦</span> NEW GAME <span class="player-modal-deco">✦</span>
+    </div>
+    <p class="player-modal-prompt">Enter your name, traveler:</p>
+    <form id="player-form" class="player-form" autocomplete="off">
+      <input type="text" id="player-name-input" class="pixel-input player-name-input"
+             maxlength="20" placeholder="..." autocomplete="off" required>
+      <button type="submit" class="pixel-btn player-confirm-btn">
+        <span class="pixel-btn-arrow">▶</span> CONFIRM
+      </button>
+    </form>
+    <p class="player-modal-hint">// your name will appear during the quest</p>
+  </div>
+</div>
+
+<!-- ============================================================
+     PHASE 1 — RETRO GAME TERMINAL BOOT SCREEN
+============================================================= -->
+<div id="boot-screen" class="boot-screen">
+  <div class="crt-overlay"></div>
+  <div class="scanline"></div>
+
+  <div class="boot-inner">
+    <div class="boot-header">
+      <span class="boot-header-deco">✦</span> QUEST&nbsp;SYSTEM&nbsp;v1.00 <span class="boot-header-deco">✦</span>
+    </div>
+
+    <div id="boot-terminal" class="boot-terminal" aria-live="polite"></div>
+
+    <div id="item-acquired" class="item-acquired hidden">
+      <div class="ia-banner">ITEM ACQUIRED!</div>
+      <div class="scroll-item-wrap">
+        <div class="scroll-item-glow"></div>
+        <img src="assets/icons/scroll-icon.svg" alt="Ancient Love Scroll" class="scroll-item-img" id="scroll-icon-img">
+      </div>
+      <div class="ia-name">— Ancient Love Scroll —</div>
+      <button id="open-scroll-btn" class="pixel-btn open-scroll-btn">
+        <span class="pixel-btn-arrow">▶</span> OPEN SCROLL
+      </button>
+    </div>
+
+    <div id="boot-skip" class="boot-skip">press anywhere to speed up ▸</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PHASE 2 — SCROLL UNROLL TRANSITION LAYER
+============================================================= -->
+<div id="unroll-stage" class="unroll-stage hidden">
+  <div class="unroll-rod unroll-rod-top"></div>
+  <div class="unroll-parchment-fill"></div>
+  <div class="unroll-rod unroll-rod-bottom"></div>
+  <div class="unroll-flash"></div>
+</div>
+
+<!-- ============================================================
+     PHASE 3 — THE SCROLL (MAIN INVITATION)
+============================================================= -->
+<main id="scroll-main" class="scroll-main hidden">
+
+  <!-- background music control -->
+  <button id="music-toggle" class="music-toggle" title="Toggle music" aria-label="Toggle background music">
+    <span class="music-icon">♪</span>
+  </button>
+
+  <div class="scroll-rod scroll-rod-top">
+    <div class="rod-cap rod-cap-left"></div>
+    <div class="rod-bar"></div>
+    <div class="rod-cap rod-cap-right"></div>
+  </div>
+
+  <div class="parchment-column" id="parchment-column">
+
+    <!-- decorative vine rail running along the parchment -->
+    <div class="vine-rail vine-rail-left" aria-hidden="true"></div>
+    <div class="vine-rail vine-rail-right" aria-hidden="true"></div>
+
+    <!-- ============== 1. OPENING ============== -->
+    <section class="chapter chapter-opening" data-chapter="1">
+      <div class="chapter-deco top-deco" aria-hidden="true">❀ ───────────── ❀</div>
+      <p class="chapter-label">Chapter I</p>
+      <h1 class="opening-title">An Invitation Scroll</h1>
+      <p class="opening-sub">has appeared before you...</p>
+      <div class="opening-emblem" aria-hidden="true">
+        <svg viewBox="0 0 32 32" class="pixel-heart-big"><use href="#sprite-heart"></use></svg>
+      </div>
+      <p class="opening-text" id="opening-flavor"></p>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>✦</span><span>❀</span><span>✦</span></div>
+
+    <!-- ============== 2. COUPLE NAMES ============== -->
+    <section class="chapter chapter-names" data-chapter="2">
+      <p class="chapter-label">Chapter II — The Heroes</p>
+      <div class="hero-card">
+        <div class="hero-block">
+          <div class="hero-frame">
+            <!-- <svg viewBox="0 0 32 32" class="pixel-icon"><use href="#sprite-sword"></use></svg> -->
+            <img src="assets/images/groom.png" alt="Groom Icon" class="hero-frame-img">
+          </div>
+          <h2 class="hero-name" id="groom-name-display"></h2>
+          <p class="hero-title">The Knight</p>
+        </div>
+
+        <div class="hero-link">
+          <span class="link-heart">♥</span>
+        </div>
+
+        <div class="hero-block">
+          <div class="hero-frame">
+            <!-- <svg viewBox="0 0 32 32" class="pixel-icon"><use href="#sprite-flower"></use></svg> -->
+            <img src="assets/images/bride.png" alt="Groom Icon" class="hero-frame-img">
+          </div>
+          <h2 class="hero-name" id="bride-name-display"></h2>
+          <p class="hero-title">The Sorceress</p>
+        </div>
+      </div>
+      <p class="names-sub">Two players. One save file. A lifetime co-op.</p>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>❀</span><span>✦</span><span>❀</span></div>
+
+    <!-- ============== 3. QUOTE ============== -->
+    <section class="chapter chapter-quote" data-chapter="3">
+      <div class="quote-box">
+        <span class="quote-mark quote-mark-open">❝</span>
+        <p class="quote-text" id="quote-text-display"></p>
+        <span class="quote-mark quote-mark-close">❞</span>
+      </div>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>✦</span><span>❀</span><span>✦</span></div>
+
+    <!-- ============== 4. SHORT STORY ============== -->
+    <section class="chapter chapter-story" data-chapter="4">
+      <p class="chapter-label">Chapter III — The Tale</p>
+      <div class="story-letter" id="story-letter">
+        <!-- filled by JS from weddingData.story[] -->
+      </div>
+      <div class="story-stamp" aria-hidden="true">
+        <span>STATUS: Soulmate Found</span>
+        <span>LOVE LEVEL: MAX</span>
+      </div>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>❀</span><span>✦</span><span>❀</span></div>
+
+    <!-- ============== 5. EVENT INFO ============== -->
+    <section class="chapter chapter-event" data-chapter="5">
+      <p class="chapter-label">Chapter IV — The Gathering</p>
+      <h3 class="event-heading">Quest Briefing</h3>
+
+      <div class="quest-board">
+        <div class="quest-row">
+          <span class="quest-icon">📜</span>
+          <div class="quest-row-text">
+            <span class="quest-row-label">Date</span>
+            <span class="quest-row-value" id="event-date-display"></span>
+          </div>
+        </div>
+        <div class="quest-row">
+          <span class="quest-icon">⏰</span>
+          <div class="quest-row-text">
+            <span class="quest-row-label">Time</span>
+            <span class="quest-row-value" id="event-time-display"></span>
+          </div>
+        </div>
+        <div class="quest-row">
+          <span class="quest-icon">🏰</span>
+          <div class="quest-row-text">
+            <span class="quest-row-label">Venue</span>
+            <span class="quest-row-value" id="event-venue-display"></span>
+          </div>
+        </div>
+        <div class="quest-row">
+          <span class="quest-icon">🗺️</span>
+          <div class="quest-row-text">
+            <span class="quest-row-label">Address</span>
+            <span class="quest-row-value" id="event-address-display"></span>
+          </div>
+        </div>
+      </div>
+
+      <a href="#" id="map-link-btn" target="_blank" rel="noopener" class="pixel-btn map-btn">
+        <span class="pixel-btn-arrow">▶</span> OPEN WORLD MAP
+      </a>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>✦</span><span>❀</span><span>✦</span></div>
+
+    <!-- ============== 6. COUNTDOWN ============== -->
+    <section class="chapter chapter-countdown" data-chapter="6">
+      <p class="chapter-label">Chapter V — Time Remaining</p>
+      <h3 class="event-heading">Quest Begins In</h3>
+
+      <div class="countdown-hud">
+        <div class="cd-unit">
+          <div class="cd-frame"><span id="cd-days">00</span></div>
+          <span class="cd-label">DAYS</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-frame"><span id="cd-hours">00</span></div>
+          <span class="cd-label">HOURS</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-frame"><span id="cd-minutes">00</span></div>
+          <span class="cd-label">MIN</span>
+        </div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit">
+          <div class="cd-frame"><span id="cd-seconds">00</span></div>
+          <span class="cd-label">SEC</span>
+        </div>
+      </div>
+      <p class="countdown-flavor" id="countdown-flavor">Loading XP bar of patience...</p>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>❀</span><span>✦</span><span>❀</span></div>
+
+    <!-- ============== 7. GALLERY ============== -->
+    <section class="chapter chapter-gallery" data-chapter="7">
+      <p class="chapter-label">Chapter VI — Memory Archive</p>
+      <h3 class="event-heading">Saved Memories</h3>
+      <p class="gallery-sub">// click a memory shard to view full resolution</p>
+
+      <div class="gallery-grid" id="gallery-grid">
+        <!-- filled by JS -->
+      </div>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>✦</span><span>❀</span><span>✦</span></div>
+
+    <!-- ============== 8. RSVP ============== -->
+    <section class="chapter chapter-rsvp" data-chapter="8">
+      <p class="chapter-label">Chapter VII — Join The Party</p>
+      <h3 class="event-heading">RSVP Menu</h3>
+
+      <form id="rsvp-form" class="rsvp-window">
+        <div class="rsvp-row">
+          <label for="rsvp-name">Character Name</label>
+          <input type="text" id="rsvp-name" name="name" class="pixel-input" placeholder="Enter your name..." required>
+        </div>
+
+        <div class="rsvp-row">
+          <label>Confirm Attendance</label>
+          <div class="rsvp-options" id="rsvp-attendance">
+            <button type="button" class="rsvp-option-btn" data-value="hadir">
+              <span class="rsvp-cursor">▶</span> Hadir
+            </button>
+            <button type="button" class="rsvp-option-btn" data-value="tidak">
+              <span class="rsvp-cursor">▶</span> Tidak Hadir
+            </button>
+          </div>
+        </div>
+
+        <div class="rsvp-row">
+          <label for="rsvp-message">Leave a Message</label>
+          <textarea id="rsvp-message" name="message" class="pixel-input pixel-textarea" rows="4" placeholder="Write your blessing..."></textarea>
+        </div>
+
+        <button type="submit" class="pixel-btn rsvp-submit-btn">
+          <span class="pixel-btn-arrow">▶</span> SEND MESSAGE
+        </button>
+
+        <div id="rsvp-success" class="rsvp-success hidden">
+          ✦ Message Sent! Thank you, brave guest. ✦
+        </div>
+      </form>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>❀</span><span>✦</span><span>❀</span></div>
+
+    <!-- ============== 9. GIFT ============== -->
+    <section class="chapter chapter-gift" data-chapter="9">
+      <p class="chapter-label">Chapter VIII — Treasure Offering</p>
+      <h3 class="event-heading">Send a Gift</h3>
+      <p class="gift-flavor">No pressure, brave guest — your presence is already the rarest item.<br>But should you wish to leave a treasure for our new journey:</p>
+
+      <div class="treasure-chest-wrap">
+        <div class="treasure-chest" id="treasure-chest">
+          <svg viewBox="0 0 64 48" class="chest-svg" id="chest-svg"><use href="#sprite-chest-closed"></use></svg>
+        </div>
+        <p class="chest-hint" id="chest-hint">// tap the chest to open</p>
+      </div>
+
+      <div class="gift-card hidden" id="gift-card">
+        <div class="gift-card-row">
+          <span class="gift-card-label">BANK</span>
+          <span class="gift-card-value" id="gift-bank-display"></span>
+        </div>
+        <div class="gift-card-row">
+          <span class="gift-card-label">ACCOUNT NO.</span>
+          <span class="gift-card-value" id="gift-account-display"></span>
+        </div>
+        <div class="gift-card-row">
+          <span class="gift-card-label">HOLDER</span>
+          <span class="gift-card-value" id="gift-holder-display"></span>
+        </div>
+        <button class="pixel-btn copy-btn" id="copy-account-btn">
+          <span class="pixel-btn-arrow">▶</span> COPY ACCOUNT NUMBER
+        </button>
+        <div id="copy-toast" class="copy-toast hidden">✓ Copied to clipboard!</div>
+      </div>
+      <div class="gift-card hidden" id="gift-card2">
+        <div class="gift-card-row">
+          <span class="gift-card-label">BANK</span>
+          <span class="gift-card-value" id="gift-bank-display2"></span>
+        </div>
+        <div class="gift-card-row">
+          <span class="gift-card-label">ACCOUNT NO.</span>
+          <span class="gift-card-value" id="gift-account-display2"></span>
+        </div>
+        <div class="gift-card-row">
+          <span class="gift-card-label">HOLDER</span>
+          <span class="gift-card-value" id="gift-holder-display2"></span>
+        </div>
+        <button class="pixel-btn copy-btn" id="copy-account-btn2">
+          <span class="pixel-btn-arrow">▶</span> COPY ACCOUNT NUMBER
+        </button>
+        <div id="copy-toast2" class="copy-toast hidden">✓ Copied to clipboard!</div>
+      </div>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>✦</span><span>❀</span><span>✦</span></div>
+
+    <!-- ============== EASTER EGG ACHIEVEMENT STRIP ============== -->
+    <section class="chapter chapter-achievements" data-chapter="10">
+      <div class="achievement-board">
+        <div class="ach-row"><span class="ach-icon">🏆</span><span>Achievement Unlocked: <strong>Soulmate Found</strong></span></div>
+        <div class="ach-row"><span class="ach-icon">💞</span><span>Relationship Build: <strong>Stable Release</strong></span></div>
+        <div class="ach-row"><span class="ach-icon">🔓</span><span>Event Unlocked: <strong>Wedding Day</strong></span></div>
+      </div>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>❀</span><span>✦</span><span>❀</span></div>
+
+    <!-- ============== COUPLE PORTRAITS ============== -->
+    <section class="chapter chapter-portraits" data-chapter="11">
+      <p class="chapter-label">Final Chapter — The Heroes, In Person</p>
+      <h3 class="event-heading">Party Members</h3>
+
+      <div class="portrait-duo">
+        <div class="portrait-card" data-url="assets/images/bride-full.png" data-caption="The Bride">
+          <div class="portrait-frame">
+            <img src="assets/images/bride-portrait.jpg" alt="Potret Mempelai Wanita" id="bride-portrait-img">
+          </div>
+          <p class="portrait-name" id="bride-portrait-name"></p>
+          <p class="portrait-role">The Sorceress</p>
+        </div>
+
+        <div class="portrait-card" data-url="assets/images/groom-full.png" data-caption="The Groom">
+          <div class="portrait-frame">
+            <img src="assets/images/groom-portrait.jpg" alt="Potret Mempelai Pria" id="groom-portrait-img">
+          </div>
+          <p class="portrait-name" id="groom-portrait-name"></p>
+          <p class="portrait-role">The Knight</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="chapter-divider" aria-hidden="true"><span>✦</span><span>❀</span><span>✦</span></div>
+
+    <!-- ============== 10. CLOSING ============== -->
+    <section class="chapter chapter-closing" data-chapter="12">
+      <p class="end-of-story">— END OF STORY —</p>
+      <p class="closing-thanks">Thank you for being part of our journey.</p>
+      <p class="closing-sub">May your own adventure be filled with just as much love.</p>
+
+      <div class="signature-wrap">
+        <svg class="signature-svg" id="signature-svg" viewBox="0 0 400 100" preserveAspectRatio="xMidYMid meet">
+          <path id="signature-path-1" class="signature-path" d=""></path>
+          <path id="signature-path-2" class="signature-path" d=""></path>
+        </svg>
+      </div>
+      <p class="signature-names" id="signature-names-text"></p>
+
+      <div class="closing-final-deco" aria-hidden="true">❀ ───── ✦ ───── ❀</div>
+      <p class="closing-credit">coded with love by the groom</p>
+    </section>
+
+  </div>
+
+  <div class="scroll-rod scroll-rod-bottom">
+    <div class="rod-cap rod-cap-left"></div>
+    <div class="rod-bar"></div>
+    <div class="rod-cap rod-cap-right"></div>
+  </div>
+</main>
+
+<!-- ============================================================
+     LIGHTBOX (Gallery zoom)
+============================================================= -->
+<div id="lightbox" class="lightbox hidden">
+  <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+  <div class="lightbox-frame">
+    <img id="lightbox-img" src="" alt="Memory">
+    <p id="lightbox-caption" class="lightbox-caption"></p>
+    <button id="lightbox-close" class="pixel-btn lightbox-close-btn">✕ CLOSE</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     SVG SPRITE DEFS (pixel-art icons drawn as inline SVG, no images needed)
+============================================================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="sprite-heart" viewBox="0 0 32 32">
+      <path fill="currentColor" d="M9 4h4v4h-4zM19 4h4v4h4v4h-4v4h-4V8h-4v8h-4v-4H5V8h4V4h4z"/>
+      <path fill="currentColor" d="M9 16h4v4H9zM19 16h4v4h-4zM13 20h6v4h-6zM15 24h2v4h-2z"/>
+    </symbol>
+    <symbol id="sprite-sword" viewBox="0 0 32 32">
+      <path fill="currentColor" d="M20 4h2v2h2v2h-2v2h-2v2h-2v2h-2v2h-2v2h-2v2H8v2H6v2H4v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2v-2h2V8h2V6h-2z"/>
+      <path fill="currentColor" d="M6 22h4v2H8v2H6v2H4v-2h2v-2z" opacity="0.8"/>
+    </symbol>
+    <symbol id="sprite-flower" viewBox="0 0 32 32">
+      <path fill="currentColor" d="M14 4h4v4h4v4h-4v4h-4v-4h-4V8h4z"/>
+      <path fill="currentColor" d="M14 16h4v4h-4z"/>
+      <path fill="currentColor" d="M15 20h2v8h-2z"/>
+      <path fill="currentColor" d="M10 26h4v2h-4zM18 26h4v2h-4z" opacity="0.85"/>
+    </symbol>
+    <symbol id="sprite-leaf" viewBox="0 0 32 32">
+      <path fill="currentColor" d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20z"/>
+      <path fill="none" stroke="#3c5a32" stroke-width="1.5" d="M8 24C10 16 16 10 24 8"/>
+    </symbol>
+    <symbol id="sprite-star4" viewBox="0 0 32 32">
+      <path fill="currentColor" d="M16 2l3 11 11 3-11 3-3 11-3-11-11-3 11-3z"/>
+    </symbol>
+    <symbol id="sprite-butterfly" viewBox="0 0 32 32">
+      <path fill="currentColor" d="M16 8c-2-4-8-5-10-2-2 3 1 7 5 8-4 1-7 5-5 8 2 3 8 2 10-2 2 4 8 5 10 2 2-3-1-7-5-8 4-1 7-5 5-8-2-3-8-2-10 2z" opacity="0.9"/>
+      <rect x="15" y="6" width="2" height="20" fill="#3c2a1e"/>
+    </symbol>
+    <symbol id="sprite-chest-closed" viewBox="0 0 64 48">
+      <rect x="6" y="20" width="52" height="24" fill="#8a5a2e" stroke="#3c2410" stroke-width="2"/>
+      <rect x="6" y="20" width="52" height="6" fill="#6e4422"/>
+      <path d="M6 20 Q32 2 58 20 L58 26 Q32 10 6 26 Z" fill="#a8702f" stroke="#3c2410" stroke-width="2"/>
+      <rect x="28" y="20" width="8" height="10" fill="#e8c34a" stroke="#3c2410" stroke-width="1.5"/>
+      <rect x="4" y="18" width="6" height="28" fill="#5a3a1a"/>
+      <rect x="54" y="18" width="6" height="28" fill="#5a3a1a"/>
+    </symbol>
+    <symbol id="sprite-chest-open" viewBox="0 0 64 48">
+      <rect x="6" y="24" width="52" height="20" fill="#8a5a2e" stroke="#3c2410" stroke-width="2"/>
+      <path d="M6 24 Q32 6 58 24" fill="none" stroke="#3c2410" stroke-width="2"/>
+      <path d="M4 22 Q32 -8 60 22 L58 24 Q32 -2 6 24 Z" fill="#a8702f" stroke="#3c2410" stroke-width="2"/>
+      <rect x="4" y="22" width="6" height="24" fill="#5a3a1a"/>
+      <rect x="54" y="22" width="6" height="24" fill="#5a3a1a"/>
+      <circle cx="32" cy="20" r="7" fill="#ffe066"/>
+      <circle cx="32" cy="20" r="10" fill="#ffe066" opacity="0.35"/>
+      <path fill="#fff7d6" d="M32 12l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- audio (loops softly, optional file) -->
+<audio id="bg-music" loop preload="none">
+  <source src="assets/audio/theme.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfx-confirm" preload="none">
+  <source src="assets/audio/paper-sfx.mp3" type="audio/mpeg">
+</audio>
+<audio id="sfx-page" preload="none">
+  <source src="assets/audio/gallery-sfx.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ===== LIBRARIES (CDN) ===== -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+  // Graceful guard: if jQuery failed to load (e.g. no internet on first open),
+  // skip straight to the scroll content instead of leaving a blank page.
+  if (typeof window.jQuery === 'undefined') {
+    document.addEventListener('DOMContentLoaded', function () {
+      var boot = document.getElementById('boot-screen');
+      var unroll = document.getElementById('unroll-stage');
+      var main = document.getElementById('scroll-main');
+      if (boot) boot.classList.add('hidden');
+      if (unroll) unroll.classList.add('hidden');
+      if (main) main.classList.remove('hidden');
+      console.warn('jQuery/GSAP failed to load from CDN — showing static fallback. Check your internet connection.');
+    });
+  }
+</script>
+
+<!-- ===== APP ===== -->
+<script src="js/app.js"></script>
+</body>
+</html>
