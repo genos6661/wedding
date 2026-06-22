@@ -992,3 +992,70 @@ $(function(){
   });
 });
 
+
+function downloadICS({
+    title,
+    description,
+    location,
+    startDate,
+    endDate,
+    filename = 'wedding-invitation'
+}) {
+
+    const formatDate = (date) => {
+        return date.toISOString()
+            .replace(/[-:]/g, '')
+            .split('.')[0] + 'Z';
+    };
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Wedding Invitation//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:${Date.now()}@wedding-invitation
+DTSTAMP:${formatDate(new Date())}
+DTSTART:${formatDate(startDate)}
+DTEND:${formatDate(endDate)}
+SUMMARY:${title}
+DESCRIPTION:${description}
+LOCATION:${location}
+STATUS:CONFIRMED
+SEQUENCE:0
+END:VEVENT
+END:VCALENDAR`;
+
+    const blob = new Blob(
+        [icsContent],
+        { type: 'text/calendar;charset=utf-8' }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `${filename}.ics`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+}
+
+$('#save-date-btn').click(function () {
+
+    downloadICS({
+        title: 'Wedding of Fathur & Sephia',
+        description: 'Thank you for being part of our journey.',
+        location: 'Kertosono, Nganjuk',
+        startDate: new Date('2026-07-23T11:00:00+07:00'),
+        endDate: new Date('2026-07-23T19:00:00+07:00'),
+        filename: 'Fathur-Sephia-Wedding'
+    });
+
+});
