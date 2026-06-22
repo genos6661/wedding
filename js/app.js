@@ -1047,15 +1047,44 @@ END:VCALENDAR`;
     URL.revokeObjectURL(url);
 }
 
+function addToGoogleCalendar() {
+
+    const title = encodeURIComponent(
+        'Wedding of Fathur & Sephia'
+    );
+
+    const details = encodeURIComponent(
+        'Thank you for being part of our journey.'
+    );
+
+    const location = encodeURIComponent(
+        'Kertosono, Nganjuk, Jawa Timur'
+    );
+
+    const start = '20260723T110000Z';
+    const end = '20260723T190000Z';
+
+    const url =
+        'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+        '&text=' + title +
+        '&dates=' + start + '/' + end +
+        '&details=' + details +
+        '&location=' + location;
+
+    window.open(url, '_blank');
+}
+
 $('#save-date-btn').click(function () {
 
-    downloadICS({
-        title: 'Wedding of Fathur & Sephia',
-        description: 'Thank you for being part of our journey.',
-        location: 'Kertosono, Nganjuk',
-        startDate: new Date('2026-07-23T11:00:00+07:00'),
-        endDate: new Date('2026-07-23T19:00:00+07:00'),
-        filename: 'Fathur-Sephia-Wedding'
-    });
+    addToGoogleCalendar();
+
+    // downloadICS({
+    //     title: 'Wedding of Fathur & Sephia',
+    //     description: 'Thank you for being part of our journey.',
+    //     location: 'Kertosono, Nganjuk',
+    //     startDate: new Date('2026-07-23T11:00:00+07:00'),
+    //     endDate: new Date('2026-07-23T19:00:00+07:00'),
+    //     filename: 'Fathur-Sephia-Wedding'
+    // });
 
 });
